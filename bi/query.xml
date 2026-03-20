@@ -43,38 +43,38 @@
                 <invariant>FirebirdSQL</invariant>
             </providers>
     
-    <![CDATA[ 
-    SELECT DISTINCT
-        vp.ent_id,
-        n.name_given,
-        n.name_family,
-        ad.addr_country,
-        ad.addr_county,
-        ad.addr_state,
-        ad.addr_city,
-        ad.addr_street,
-        dob,
-        gender,
-        reg_date AS reg_date,
-        marital_sts,
-        living_arr,
-        bp_name.name AS birthplace,
-        reg_name.name AS registration,
-        asn_name.name AS assigned
-    FROM 
-        vw_pat_tbl vp
-        LEFT JOIN ent_addr_tbl AS ad ON (ad.ent_id = vp.ent_id AND ad.addr_type = 'HomeAddress')
-        LEFT JOIN ent_name_tbl AS n ON (n.ent_id = vp.ent_id AND n.use_type = 'OfficialRecord')
-        LEFT JOIN ent_name_tbl bp_name ON (bp_name.ent_id = birthplace AND bp_name.use_type = 'OfficialRecord')
-        LEFT JOIN ent_name_tbl reg_name ON (reg_name.ent_id = registration_facility AND reg_name.use_type = 'OfficialRecord')
-        LEFT JOIN ent_name_tbl asn_name ON (asn_name.ent_id = assigned_facility AND asn_name.use_type = 'OfficialRecord')
-    WHERE 
-        (${registration_facility}::UUID IS NULL OR registration_facility = ${registration_facility}::UUID)
-        AND (${assigned_facility}::UUID IS NULL OR assigned_facility = ${assigned_facility}::UUID)
-        AND created_time BETWEEN ${reg_from} AND ${reg_to}
+            <![CDATA[ 
+            SELECT DISTINCT
+                vp.ent_id,
+                n.name_given,
+                n.name_family,
+                ad.addr_country,
+                ad.addr_county,
+                ad.addr_state,
+                ad.addr_city,
+                ad.addr_street,
+                dob,
+                gender,
+                reg_date AS reg_date,
+                marital_sts,
+                living_arr,
+                bp_name.name AS birthplace,
+                COALESCE(reg_name.name, 'Other') AS registration,
+                asn_name.name AS assigned
+            FROM 
+                vw_pat_tbl vp
+                LEFT JOIN ent_addr_tbl AS ad ON (ad.ent_id = vp.ent_id AND ad.addr_type = 'HomeAddress')
+                LEFT JOIN ent_name_tbl AS n ON (n.ent_id = vp.ent_id AND n.use_type = 'OfficialRecord')
+                LEFT JOIN ent_name_tbl bp_name ON (bp_name.ent_id = birthplace AND bp_name.use_type = 'OfficialRecord')
+                LEFT JOIN ent_name_tbl reg_name ON (reg_name.ent_id = registration_facility AND reg_name.use_type = 'OfficialRecord')
+                LEFT JOIN ent_name_tbl asn_name ON (asn_name.ent_id = assigned_facility AND asn_name.use_type = 'OfficialRecord')
+            WHERE 
+                (${registration_facility}::UUID IS NULL OR registration_facility = ${registration_facility}::UUID)
+                AND (${assigned_facility}::UUID IS NULL OR assigned_facility = ${assigned_facility}::UUID)
+                AND created_time BETWEEN ${reg_from} AND ${reg_to}
 
-    ]]>
-    </add>
+            ]]>
+        </add>
     </definitions>
 
 </BiQueryDefinition>

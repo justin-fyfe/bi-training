@@ -41,7 +41,7 @@
         <add>
             <providers>sqlite</providers>
             <grouping>
-                <column name="_keyvalue">registration || EXTRACT(MONTH FROM reg_date) || EXTRACT(YEAR FROM reg_date)</column>
+                <column name="_keyvalue">registration || strftime('%Y%m', date(reg_date, 'unixepoch'))</column>
                 <column name="gender">gender</column>
                 <column name="registration">registration</column>
                 <column name="reg_year">strftime('%Y', date(reg_date, 'unixepoch'))</column>

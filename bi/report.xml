@@ -81,7 +81,7 @@
         <add type="tabular" name="table" label="Registered Patients">
             <div xmlns="http://www.w3.org/1999/xhtml" xmlns:bi="http://santedb.org/bi/view">
                 <div>
-                    <h3>Registered Patients Registered 
+                    <h3>Registered Patients 
                         <small class="ml-2 text-muted"><bi:value format="yyyy-MMM-dd">DateTime.Parse(Parameters.reg_from.ToString())</bi:value> - 
                         <bi:value format="yyyy-MMM-dd">DateTime.Parse(Parameters.reg_from.ToString())</bi:value></small>
                     </h3>
