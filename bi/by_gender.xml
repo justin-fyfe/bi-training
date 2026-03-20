@@ -1,0 +1,64 @@
+<BiViewDefinition
+    xmlns="http://santedb.org/bi"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://santedb.org/bi http://santedb.org/schema/v3.0/BusinessIntelligence.xsd"
+    id="org.santedb.training.view.registration.aggregateByGender"
+    label="Patient Registrations By Facility By Gender"
+    name="patient_reg_view_agg_gender">
+
+    <meta>
+        <authors>
+            <add>Justin Fyfe</add>
+        </authors>
+        <annotation>
+            <div xmlns="http://www.w3.org/1999/xhtml">
+                <span>Provides an aggregate view of the registration view by facility aggregations
+                    by gender</span>
+            </div>
+        </annotation>
+    </meta>
+
+    <!-- Query source - this can be inline as well -->
+    <query ref="#org.santedb.training.query.patientRegistration" />
+
+    <aggregations>
+        <add>
+            <providers>
+                <invariant>npgsql</invariant>
+            </providers>
+            <grouping>
+                <!-- A pivot requires a column based on which the data can be aggregated -->
+                <column name="_keyvalue">registration || EXTRACT(MONTH FROM reg_date) || EXTRACT(YEAR FROM reg_date)</column>
+                <column name="gender">gender</column>
+                <column name="registration">registration</column>
+                <column name="reg_year">EXTRACT(YEAR FROM reg_date)</column>
+                <column name="reg_month">EXTRACT(MONTH FROM reg_date)</column>
+            </grouping>
+            <select>
+                <column name="n_registrations" fn="count-distinct">ent_id</column>
+            </select>
+        </add>
+        <add>
+            <providers>sqlite</providers>
+            <grouping>
+                <column name="_keyvalue">registration || EXTRACT(MONTH FROM reg_date) || EXTRACT(YEAR FROM reg_date)</column>
+                <column name="gender">gender</column>
+                <column name="registration">registration</column>
+                <column name="reg_year">strftime('%Y', date(reg_date, 'unixepoch'))</column>
+                <column name="reg_month">strftime('%m', date(reg_date, 'unixepoch'))</column>
+            </grouping>
+            <select>
+                <column name="n_registrations" fn="count-distinct">ent_id</column>
+            </select>
+        </add>
+    </aggregations>
+
+    <!-- PIVOT -->
+    <pivot fn="sum" key="_keyvalue" columnDef="gender" value="n_registrations">
+        <columns>
+            <add>Male</add>
+            <add>Female</add>
+            <add>Unknown</add>
+        </columns>
+    </pivot>
+</BiViewDefinition>

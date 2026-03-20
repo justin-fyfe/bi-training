@@ -1,0 +1,45 @@
+<BiParameterDefinition
+    xmlns="http://santedb.org/bi"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://santedb.org/bi http://santedb.org/schema/v3.0/BusinessIntelligence.xsd"
+    id="org.santedb.training.parameter.facility"
+    label="Facility"
+    type="uuid"
+    name="facility">
+
+    <meta>
+        <authors>
+            <add>Justin Fyfe</add>
+        </authors>
+        <annotation>
+            <div xmlns="http://www.w3.org/1999/xhtml">
+                <span>Common parameter for facilities</span>
+            </div>
+        </annotation>
+        <public>false</public>
+    </meta>
+
+    <query>
+        <dataSources>
+            <add ref="#org.santedb.bi.dataSource.warehouse" name="warehouse" />
+        </dataSources>
+        <definitions>
+            <add>
+                <providers>
+                    <invariant>npgsql</invariant>
+                    <invariant>sqlite</invariant>
+                </providers>
+                <![CDATA[ 
+                SELECT DISTINCT 
+                    ent_id AS id, name AS value
+                FROM 
+                    ent_tbl 
+                    INNER JOIN ent_name_tbl USING (ent_id)
+                WHERE 
+                    ent_tbl.class = 'ServiceDeliveryLocation'
+                    AND status = 'ACTIVE'
+                ]]>
+            </add>
+        </definitions>
+    </query>
+</BiParameterDefinition>

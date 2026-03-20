@@ -1,0 +1,146 @@
+<BiReportDefinition
+    xmlns="http://santedb.org/bi"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://santedb.org/bi http://santedb.org/schema/v3.0/BusinessIntelligence.xsd"
+    id="org.santedb.training.report.patientRegistrationSummary"
+    label="Patient Registration Summary"
+    name="patient_regs">
+
+    <meta>
+        <authors>
+            <add>Justin Fyfe</add>
+        </authors>
+        <annotation>
+            <div xmlns="http://www.w3.org/1999/xhtml">
+                <span>Shows summary information of registrations</span>
+            </div>
+        </annotation>
+        <policies>
+            <demand>1.3.6.1.4.1.33349.3.1.5.9.2.2.3</demand>
+        </policies>
+        <public>true</public>
+    </meta>
+
+    <dataSources>
+        <view name="agg-facility-age"
+            ref="#org.santedb.training.view.registration.aggregateByAgeRange" />
+        <view name="pivot-facility-gender"
+            ref="#org.santedb.training.view.registration.aggregateByGender" />
+        <query name="raw-registration" ref="#org.santedb.training.query.patientRegistration"></query>
+    </dataSources>
+
+    <views>
+        <add type="chart" name="by-age-range" label="Summary By Age Group">
+            <div xmlns="http://www.w3.org/1999/xhtml" xmlns:bi="http://santedb.org/bi/view">
+                <div>
+                    <h3>Summaries By Age</h3>
+                    <bi:chart source="agg-facility-age" type="pie" legend="true">
+                        <bi:title>Patient Registrations By Age Category</bi:title>
+                        <bi:labels>age_at_reg</bi:labels>
+                        <bi:dataset label="Registrations" fn="sum">n_registrations</bi:dataset>
+                    </bi:chart>
+                </div>
+            </div>
+        </add>
+        <add type="chart" name="by-gender" label="Summary By Gender">
+            <div xmlns="http://www.w3.org/1999/xhtml" xmlns:bi="http://santedb.org/bi/view">
+                <div>
+                    <h3>Summary By Gender</h3>
+                    <bi:chart source="agg-facility-age" type="pie" legend="true">
+                        <bi:title>Patient Registrations By Age Category</bi:title>
+                        <bi:labels>gender</bi:labels>
+                        <bi:dataset label="Registrations" fn="sum">n_registrations</bi:dataset>
+                    </bi:chart>
+                    <bi:dataTable source="pivot-facility-gender">
+                        <bi:column>
+                            <bi:header>Facility</bi:header>
+                            <bi:cell>
+                                <bi:value>registration</bi:value>
+                            </bi:cell>
+                        </bi:column>
+                        <bi:column>
+                            <bi:header>Date</bi:header>
+                            <bi:cell>
+                                <bi:value format="MMMM, yyyy">
+                                    new DateTime((int)reg_year, (int)reg_month, 01)
+                                </bi:value>
+                            </bi:cell>
+                        </bi:column>
+                        <bi:column>
+                            <bi:header>Male</bi:header>
+                            <bi:cell><bi:value format="0" default="0">Male</bi:value></bi:cell>
+                        </bi:column>
+                        <bi:column>
+                            <bi:header>Female</bi:header>
+                            <bi:cell><bi:value format="0" default="0">Female</bi:value></bi:cell>
+                        </bi:column>
+                    </bi:dataTable>
+                </div>
+            </div>
+        </add>
+        <add type="tabular" name="table" label="Registered Patients">
+            <div xmlns="http://www.w3.org/1999/xhtml" xmlns:bi="http://santedb.org/bi/view">
+                <div>
+                    <h3>Registered Patients Registered 
+                        <small class="ml-2 text-muted"><bi:value format="yyyy-MMM-dd">DateTime.Parse(Parameters.reg_from.ToString())</bi:value> - 
+                        <bi:value format="yyyy-MMM-dd">DateTime.Parse(Parameters.reg_from.ToString())</bi:value></small>
+                    </h3>
+                    <bi:dataTable source="raw-registration">
+                        <bi:column>
+                            <bi:header>Reg Facility</bi:header>
+                            <bi:cell>
+                                <bi:value>registration</bi:value>
+                            </bi:cell>
+                        </bi:column>
+                        <bi:column>
+                            <bi:header>Dedicated Facility</bi:header>
+                            <bi:cell>
+                                <bi:value>assigned</bi:value>
+                            </bi:cell>
+                        </bi:column>
+                        <bi:column>
+                            <bi:header>Registration Date</bi:header>
+                            <bi:cell>
+                                <bi:value format="yyyy-MM-dd">reg_date</bi:value>
+                            </bi:cell>
+                        </bi:column>
+                        <bi:column>
+                            <bi:header>DOB</bi:header>
+                            <bi:cell>
+                                <bi:value format="yyyy-MM-dd">dob</bi:value>
+                            </bi:cell>
+                        </bi:column>
+                        <bi:column>
+                            <bi:header>Gender</bi:header>
+                            <bi:cell>
+                                <bi:switch value="gender">
+                                    <bi:when op="eq" value="Male">
+                                        <i class="fas fa-fw fa-male"></i>
+                                    </bi:when>
+                                    <bi:when op="eq" value="Female">
+                                        <i class="fas fa-fw fa-female"></i>
+                                    </bi:when>
+                                </bi:switch>
+                                <bi:value>gender</bi:value>
+                            </bi:cell>
+                        </bi:column>
+                        <bi:column>
+                            <bi:header>Name</bi:header>
+                            <bi:cell>
+                                <bi:value>name_given</bi:value>
+                                <bi:value>name_family</bi:value>
+                            </bi:cell>
+                        </bi:column>
+                        <bi:column>
+                            <bi:header>Address</bi:header>
+                            <bi:cell>
+                                <bi:value>addr_street</bi:value>, <bi:value>addr_city</bi:value>, <bi:value>
+                                addr_state</bi:value>
+                            </bi:cell>
+                        </bi:column>
+                    </bi:dataTable>
+                </div>
+            </div>
+        </add>
+    </views>
+</BiReportDefinition>

@@ -1,0 +1,94 @@
+<BiViewDefinition
+    xmlns="http://santedb.org/bi"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://santedb.org/bi http://santedb.org/schema/v3.0/BusinessIntelligence.xsd"
+    id="org.santedb.training.view.registration.aggregateByAgeRange"
+    label="Patient Registrations By Facility Age Ranges"
+    name="patient_reg_view_agg">
+
+    <meta>
+        <authors>
+            <add>Justin Fyfe</add>
+        </authors>
+        <annotation>
+            <div xmlns="http://www.w3.org/1999/xhtml">
+                <span>Provides an aggregate view of the registration view by facility aggregations
+                    by age range</span>
+            </div>
+        </annotation>
+    </meta>
+
+    <!-- Query source - this can be inline as well -->
+    <query ref="#org.santedb.training.query.patientRegistration" />
+
+    <aggregations>
+        <add>
+            <providers>
+                <invariant>npgsql</invariant>
+            </providers>
+            <grouping>
+                <!-- A pivot requires a column based on which the data can be aggregated -->
+                <column name="_keyvalue">registration || EXTRACT(MONTH FROM reg_date) || EXTRACT(YEAR FROM reg_date) || gender</column>
+                <column name="gender">gender</column>
+                <column name="age_at_reg"><![CDATA[
+                    CASE 
+                        WHEN AGE(reg_date, dob) < '1 MONTH' THEN '0 - 1 Mo' 
+                        WHEN AGE(reg_date, dob) < '3 MONTH' THEN '1 - 3 Mo'
+                        WHEN AGE(reg_date, dob) < '6 MONTH' THEN '3 - 6 Mo'
+                        WHEN AGE(reg_date, dob) < '12 MONTH' THEN '6 - 12 Mo'
+                        WHEN AGE(reg_date, dob) < '18 MONTH' THEN '12 - 18 Mo'
+                        WHEN AGE(reg_date, dob) < '5 YEAR' THEN '18 Mo - 5 Yr'
+                        WHEN AGE(reg_date, dob) < '12 YEAR' THEN '6 - 12 Yr'
+                        WHEN AGE(reg_date, dob) < '18 YEAR' THEN '12 - 18 Yr'
+                        WHEN AGE(reg_date, dob) < '30 YEAR' THEN '19 - 30 Yr'
+                        WHEN AGE(reg_date, dob) < '45 YEAR' THEN '31 - 45 Yr'
+                        WHEN AGE(reg_date, dob) < '65 YEAR' THEN '45 - 65 Yr'
+                        ELSE '> 66 Yr' 
+                    END
+                    ]]></column>
+                <column name="registration">registration</column>
+                <column name="reg_year">EXTRACT(YEAR FROM reg_date)</column>
+                <column name="reg_month">EXTRACT(MONTH FROM reg_date)</column>
+            </grouping>
+            <select>
+                <column name="n_registrations" fn="count-distinct">ent_id</column>
+            </select>
+        </add>
+        <add>
+            <providers>sqlite</providers>
+            <grouping>
+                <column name="_keyvalue">registration || EXTRACT(MONTH FROM reg_date) || EXTRACT(YEAR FROM reg_date) || gender</column>
+                <column name="gender">gender</column>
+                <!-- In SQLite you can use two different manners for extracting dates: 
+                1 - Use DAYS OLD at time of registration: (reg_date - dob) / 86400 
+                2 - Use MONTHS OLD at time of registration (strftime('%Y', date(reg_date, 'unixepoch')) * 12 +
+                strftime('%m', date(reg_date, 'unix_epoch'))) - (strftime('%Y', date(dob,
+                'unixepoch')) * 12 + strftime('%m', date(dob, 'unix_epoch')))
+                -->
+                <column name="age_at_reg"><![CDATA[
+                    CASE 
+                        WHEN (reg_date - dob) / 86400  < 30 THEN '0 - 1 Mo' 
+                        WHEN (reg_date - dob) / 86400 < 90 THEN '1 - 3 Mo'
+                        WHEN (reg_date - dob) / 86400 < 180 THEN '3 - 6 Mo'
+                        WHEN (reg_date - dob) / 86400 < 365 THEN '6 - 12 Mo'
+                        WHEN (reg_date - dob) / 86400 < 540 THEN '12 - 18 Mo'
+                        WHEN (reg_date - dob) / 86400 < 1825 THEN '18 Mo - 5 Yr'
+                        WHEN (reg_date - dob) / 86400 < 4380 THEN '6 - 12 Yr'
+                        WHEN (reg_date - dob) / 86400 < 6570 THEN '12 - 18 Yr'
+                        WHEN (reg_date - dob) / 86400 < 10957 THEN '19 - 30 Yr'
+                        WHEN (reg_date - dob) / 86400 < 16436 THEN '31 - 45 Yr'
+                        WHEN (reg_date - dob) / 86400 < 23741 THEN '45 - 65 Yr'
+                        ELSE '> 66 Yr' 
+                    END
+                    ]]></column>
+                <column name="registration">registration</column>
+                <column name="reg_year">strftime('%Y', date(reg_date, 'unixepoch'))</column>
+                <column name="reg_month">strftime('%m', date(reg_date, 'unixepoch'))</column>
+            </grouping>
+            <select>
+                <column name="n_registrations" fn="count-distinct">ent_id</column>
+            </select>
+        </add>
+    </aggregations>
+
+</BiViewDefinition>

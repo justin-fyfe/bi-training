@@ -1,0 +1,80 @@
+<BiQueryDefinition
+    xmlns="http://santedb.org/bi"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://santedb.org/bi http://santedb.org/schema/v3.0/BusinessIntelligence.xsd"
+    id="org.santedb.training.query.patientRegistration"
+    label="Patient Registration Info"
+    name="patient_reg_info">
+    <meta>
+        <authors>
+            <add>Justin Fyfe</add>
+        </authors>
+        <annotation>
+            <div xmlns="http://www.w3.org/1999/xhtml">
+                <span>Common registration information for patients</span>
+            </div>
+        </annotation>
+        <policies>
+            <demand>1.3.6.1.4.1.33349.3.1.5.9.2.2.3</demand>
+        </policies>
+        <public>false</public>
+    </meta>
+
+    <dataSources>
+        <add ref="#org.santedb.bi.dataSource.warehouse" name="warehouse" />
+    </dataSources>
+
+    <parameters>
+        <add name="reg_from" type="date" label="Registered From" multiple="false" max="reg_to"
+            required="true" />
+        <add name="reg_to" type="date" label="Registered To" multiple="false" min="reg_from"
+            required="true" />
+        <add ref="#org.santedb.training.parameter.facility" name="registration_facility" type="uuid"
+            required="false" />
+        <add ref="#org.santedb.training.parameter.facility" name="assigned_facility" type="uuid"
+            required="false" />
+    </parameters>
+
+    <definitions>
+        <add>
+            <providers>
+                <invariant>npgsql</invariant>
+                <invariant>sqlite</invariant>
+                <invariant>FirebirdSQL</invariant>
+            </providers>
+    
+    <![CDATA[ 
+    SELECT DISTINCT
+        vp.ent_id,
+        n.name_given,
+        n.name_family,
+        ad.addr_country,
+        ad.addr_county,
+        ad.addr_state,
+        ad.addr_city,
+        ad.addr_street,
+        dob,
+        gender,
+        reg_date AS reg_date,
+        marital_sts,
+        living_arr,
+        bp_name.name AS birthplace,
+        reg_name.name AS registration,
+        asn_name.name AS assigned
+    FROM 
+        vw_pat_tbl vp
+        LEFT JOIN ent_addr_tbl AS ad ON (ad.ent_id = vp.ent_id AND ad.addr_type = 'HomeAddress')
+        LEFT JOIN ent_name_tbl AS n ON (n.ent_id = vp.ent_id AND n.use_type = 'OfficialRecord')
+        LEFT JOIN ent_name_tbl bp_name ON (bp_name.ent_id = birthplace AND bp_name.use_type = 'OfficialRecord')
+        LEFT JOIN ent_name_tbl reg_name ON (reg_name.ent_id = registration_facility AND reg_name.use_type = 'OfficialRecord')
+        LEFT JOIN ent_name_tbl asn_name ON (asn_name.ent_id = assigned_facility AND asn_name.use_type = 'OfficialRecord')
+    WHERE 
+        (${registration_facility}::UUID IS NULL OR registration_facility = ${registration_facility}::UUID)
+        AND (${assigned_facility}::UUID IS NULL OR assigned_facility = ${assigned_facility}::UUID)
+        AND created_time BETWEEN ${reg_from} AND ${reg_to}
+
+    ]]>
+    </add>
+    </definitions>
+
+</BiQueryDefinition>
