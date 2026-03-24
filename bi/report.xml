@@ -68,11 +68,15 @@
                         </bi:column>
                         <bi:column>
                             <bi:header>Male</bi:header>
-                            <bi:cell><bi:value format="0" default="0">Male</bi:value></bi:cell>
+                            <bi:cell>
+                                <bi:value format="0" default="0">Male</bi:value>
+                            </bi:cell>
                         </bi:column>
                         <bi:column>
                             <bi:header>Female</bi:header>
-                            <bi:cell><bi:value format="0" default="0">Female</bi:value></bi:cell>
+                            <bi:cell>
+                                <bi:value format="0" default="0">Female</bi:value>
+                            </bi:cell>
                         </bi:column>
                     </bi:dataTable>
                 </div>
@@ -81,9 +85,10 @@
         <add type="tabular" name="table" label="Registered Patients">
             <div xmlns="http://www.w3.org/1999/xhtml" xmlns:bi="http://santedb.org/bi/view">
                 <div>
-                    <h3>Registered Patients 
-                        <small class="ml-2 text-muted"><bi:value format="yyyy-MMM-dd">DateTime.Parse(Parameters.reg_from.ToString())</bi:value> - 
-                        <bi:value format="yyyy-MMM-dd">DateTime.Parse(Parameters.reg_from.ToString())</bi:value></small>
+                    <h3>Registered Patients <small class="ml-2 text-muted"><bi:value
+                                format="yyyy-MMM-dd">DateTime.Parse(Parameters.reg_from.ToString())</bi:value>
+                        - <bi:value format="yyyy-MMM-dd">
+                        DateTime.Parse(Parameters.reg_from.ToString())</bi:value></small>
                     </h3>
                     <bi:dataTable source="raw-registration">
                         <bi:column>
@@ -99,15 +104,35 @@
                             </bi:cell>
                         </bi:column>
                         <bi:column>
-                            <bi:header>Registration Date</bi:header>
-                            <bi:cell>
-                                <bi:value format="yyyy-MM-dd">reg_date</bi:value>
-                            </bi:cell>
+                            <bi:header>Registration</bi:header>
+                            <bi:column>
+                                <bi:header>Date</bi:header>
+                                <bi:cell>
+                                    <bi:value format="yyyy-MM-dd">reg_date</bi:value>
+                                </bi:cell>
+                            </bi:column>
+                            <bi:column>
+                                <bi:header>Type</bi:header>
+                                <bi:cell>
+                                    <bi:switch value="reg_type">
+                                        <bi:when op="eq" value="RegistrationType-Birth">
+                                            <i class="fas fa-fw fa-baby"></i> Delivery
+                                        </bi:when>
+                                        <bi:when op="eq" value="RegistrationType-PatientAdmission">
+                                            <i class="fas fa-fw fa-pencil"></i> Admit
+                                        </bi:when>
+                                        <bi:default>
+                                            <i class="fas fa-fw fa-question"></i> Other
+                                        </bi:default>
+                                    </bi:switch>
+                                </bi:cell>
+                            </bi:column>
                         </bi:column>
+
                         <bi:column>
                             <bi:header>DOB</bi:header>
                             <bi:cell>
-                                <bi:value format="yyyy-MM-dd">dob</bi:value>
+                                <bi:value format="yyyy-MM-dd">birth_date</bi:value>
                             </bi:cell>
                         </bi:column>
                         <bi:column>

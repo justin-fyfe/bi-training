@@ -29,9 +29,9 @@
             required="true" />
         <add name="reg_to" type="date" label="Registered To" multiple="false" min="reg_from"
             required="true" />
-        <add ref="#org.santedb.training.parameter.facility" name="registration_facility" type="uuid"
+        <add ref="#org.santedb.training.parameter.facility" label="Registration Facility" name="registration_facility" type="uuid"
             required="false" />
-        <add ref="#org.santedb.training.parameter.facility" name="assigned_facility" type="uuid"
+        <add ref="#org.santedb.training.parameter.facility" label="Assigned Facility" name="assigned_facility" type="uuid"
             required="false" />
     </parameters>
 
@@ -39,7 +39,6 @@
         <add>
             <providers>
                 <invariant>npgsql</invariant>
-                <invariant>sqlite</invariant>
                 <invariant>FirebirdSQL</invariant>
             </providers>
     
@@ -53,9 +52,10 @@
                 ad.addr_state,
                 ad.addr_city,
                 ad.addr_street,
-                dob,
+                dob as birth_date,
                 gender,
-                reg_date AS reg_date,
+                reg.act_time AS reg_date,
+                reg.type AS reg_type,
                 marital_sts,
                 living_arr,
                 bp_name.name AS birthplace,
@@ -63,6 +63,7 @@
                 asn_name.name AS assigned
             FROM 
                 vw_pat_tbl vp
+                INNER JOIN act_tbl AS reg ON (vp.reg_act = reg.act_id) -- WE ONLY WANT PATIENTS THAT HAVE BEEN REGISTERED NOT THOSE FROM AN MPI
                 LEFT JOIN ent_addr_tbl AS ad ON (ad.ent_id = vp.ent_id AND ad.addr_type = 'HomeAddress')
                 LEFT JOIN ent_name_tbl AS n ON (n.ent_id = vp.ent_id AND n.use_type = 'OfficialRecord')
                 LEFT JOIN ent_name_tbl bp_name ON (bp_name.ent_id = birthplace AND bp_name.use_type = 'OfficialRecord')
@@ -71,7 +72,45 @@
             WHERE 
                 (${registration_facility}::UUID IS NULL OR registration_facility = ${registration_facility}::UUID)
                 AND (${assigned_facility}::UUID IS NULL OR assigned_facility = ${assigned_facility}::UUID)
-                AND created_time BETWEEN ${reg_from} AND ${reg_to}
+                AND reg.act_time BETWEEN ${reg_from} AND ${reg_to}
+
+            ]]>
+        </add>
+        <add>
+            <providers>
+                <invariant>sqlite</invariant>
+            </providers>
+            <![CDATA[ 
+            SELECT DISTINCT
+                vp.ent_id,
+                n.name_given,
+                n.name_family,
+                ad.addr_country,
+                ad.addr_county,
+                ad.addr_state,
+                ad.addr_city,
+                ad.addr_street,
+                dob as birth_date,
+                gender,
+                reg.act_time AS reg_date,
+                reg.type AS reg_type,
+                marital_sts,
+                living_arr,
+                bp_name.name AS birthplace,
+                COALESCE(reg_name.name, 'Other') AS registration,
+                asn_name.name AS assigned
+            FROM 
+                vw_pat_tbl vp
+                INNER JOIN act_tbl AS reg ON (vp.reg_act = reg.act_id) -- WE ONLY WANT PATIENTS THAT HAVE BEEN REGISTERED NOT THOSE FROM AN MPI
+                LEFT JOIN ent_addr_tbl AS ad ON (ad.ent_id = vp.ent_id AND ad.addr_type = 'HomeAddress')
+                LEFT JOIN ent_name_tbl AS n ON (n.ent_id = vp.ent_id AND n.use_type = 'OfficialRecord')
+                LEFT JOIN ent_name_tbl bp_name ON (bp_name.ent_id = birthplace AND bp_name.use_type = 'OfficialRecord')
+                LEFT JOIN ent_name_tbl reg_name ON (reg_name.ent_id = registration_facility AND reg_name.use_type = 'OfficialRecord')
+                LEFT JOIN ent_name_tbl asn_name ON (asn_name.ent_id = assigned_facility AND asn_name.use_type = 'OfficialRecord')
+            WHERE 
+                (${registration_facility} IS NULL OR registration_facility = ${registration_facility})
+                AND (${assigned_facility} IS NULL OR assigned_facility = ${assigned_facility})
+                AND reg.act_time BETWEEN ${reg_from} AND ${reg_to}
 
             ]]>
         </add>
